@@ -3,755 +3,476 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@hanoi.media | Cinematic Media Production</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <title>@hanoi.media | Cinematic Production</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     
     <style>
+        /* =========================================
+           1. CORE VARIABLES & SETUP
+        ========================================= */
         :root {
+            --bg-deep: #030303;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --border-glass: rgba(255, 255, 255, 0.08);
             --gold: #D4AF37;
-            --black: #000000;
-            --white: #ffffff;
-            --gray: #111111;
-            --transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            --gold-glow: rgba(212, 175, 55, 0.15);
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: var(--black); color: var(--white); line-height: 1.6; overflow-x: hidden; }
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none !important; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-deep); color: var(--text-main); line-height: 1.6; overflow-x: hidden; }
+        html { scroll-behavior: smooth; }
+        a { text-decoration: none; }
 
-        /* --- 1. NAVBAR (SMOOTH SCROLL & COLOR) --- */
+        /* =========================================
+           2. ADVANCED INTERFACE (CURSOR & LOADER)
+        ========================================= */
+        #cursor-dot {
+            position: fixed; top: 0; left: 0; width: 6px; height: 6px; background: var(--gold);
+            border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); z-index: 9999;
+        }
+        #cursor-ring {
+            position: fixed; top: 0; left: 0; width: 40px; height: 40px; border: 1px solid var(--gold);
+            border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%);
+            z-index: 9998; transition: width 0.3s, height 0.3s, background 0.3s, border-color 0.3s;
+        }
+        .hovering #cursor-ring { width: 80px; height: 80px; background: var(--gold-glow); border-color: transparent; }
+        
+        #preloader {
+            position: fixed; inset: 0; background: var(--bg-deep); z-index: 10000;
+            display: flex; justify-content: center; align-items: center; transition: opacity 0.8s ease, visibility 0.8s;
+        }
+        .loader-text { font-size: 2.5rem; font-weight: 900; letter-spacing: 10px; color: var(--text-muted); position: relative; overflow: hidden; }
+        .loader-text::after {
+            content: '@HANOI.MEDIA'; position: absolute; top: 0; left: 0; color: var(--gold);
+            width: 100%; height: 100%; border-right: 2px solid var(--gold);
+            animation: typing 1.5s steps(12) forwards, blink 0.5s infinite; overflow: hidden;
+        }
+        @keyframes typing { 0% { width: 0; } 100% { width: 100%; } }
+        @keyframes blink { 50% { border-color: transparent; } }
+
+        #progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: var(--gold); z-index: 2000; width: 0%; transition: width 0.1s; }
+
+        /* =========================================
+           3. GLASSMORPHISM NAVBAR
+        ========================================= */
         nav {
-            position: fixed; width: 100%; padding: 25px 5%; display: flex; 
-            justify-content: space-between; align-items: center; background: transparent;
-            transition: var(--transition); z-index: 1000;
+            position: fixed; top: 0; width: 100%; padding: 30px 6%; display: flex;
+            justify-content: space-between; align-items: center; z-index: 1000; transition: var(--transition);
         }
-        nav.scrolled { background: var(--white); padding: 15px 5%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-
-        .logo { font-weight: 800; font-size: 1.6rem; letter-spacing: -1px; z-index: 1001; }
-        .logo .hanoi { color: var(--white); transition: var(--transition); }
-        .logo .media { color: var(--gold); }
-        nav.scrolled .logo .hanoi { color: var(--black); }
-
-        .nav-links { display: flex; gap: 35px; }
-        .nav-links a { 
-            color: var(--white); text-decoration: none; font-weight: 600; 
-            font-size: 0.8rem; letter-spacing: 1px; transition: var(--transition);
+        nav.scrolled { padding: 15px 6%; background: rgba(3, 3, 3, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-glass); }
+        .logo { font-size: 1.5rem; font-weight: 900; letter-spacing: -1px; color: var(--text-main); }
+        .logo span { color: var(--gold); }
+        .nav-links { display: flex; gap: 40px; }
+        .nav-links a { color: var(--text-main); font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; transition: 0.3s; position: relative; }
+        .nav-links a::after {
+            content: ''; position: absolute; bottom: -5px; left: 0; width: 0%; height: 2px;
+            background: var(--gold); transition: 0.3s;
         }
-        nav.scrolled .nav-links a { color: var(--black); }
-        .nav-links a:hover { color: var(--gold) !important; }
+        .nav-links a:hover::after { width: 100%; }
 
-        /* Mobile Menu Toggle */
-        .menu-toggle { display: none; cursor: pointer; flex-direction: column; gap: 5px; z-index: 1001; }
-        .menu-toggle span { width: 25px; height: 2px; background: #fff; transition: 0.3s; }
-        nav.scrolled .menu-toggle span { background: #000; }
-
-        /* --- 2. HERO HEADER (SIDE-BY-SIDE) --- */
-        header { height: 100vh; display: flex; align-items: center; padding: 0 8%; position: relative; }
-        .header-container { display: flex; width: 100%; max-width: 1400px; align-items: center; gap: 60px; }
+        /* =========================================
+           4. HERO SECTION (BULLETPROOF GRID)
+        ========================================= */
+        .hero { min-height: 100vh; padding: 120px 6% 60px; display: flex; align-items: center; position: relative; }
+        .hero-grid {
+            display: grid; grid-template-columns: 1fr 1.1fr; gap: 80px;
+            width: 100%; max-width: 1400px; margin: 0 auto; align-items: center;
+        }
         
-        .hero-content { flex: 1; opacity: 0; transform: translateY(30px); transition: 1s ease forwards; }
-        .hero-content.reveal { opacity: 1; transform: translateY(0); }
+        .hero-content { opacity: 0; transform: translateY(40px); transition: 1s ease 0.2s forwards; }
+        .tagline { color: var(--gold); font-size: 0.8rem; font-weight: 900; letter-spacing: 5px; display: block; margin-bottom: 20px; }
+        .hero-title { font-size: clamp(3rem, 6vw, 5rem); font-weight: 900; line-height: 1.1; margin-bottom: 30px; }
+        .hero-title span { -webkit-text-stroke: 1px var(--gold); color: transparent; }
+        .hero-desc { font-size: 1.1rem; color: var(--text-muted); max-width: 500px; margin-bottom: 40px; font-weight: 300; }
+        .hero-tags span { display: inline-block; padding: 8px 16px; border: 1px solid var(--border-glass); border-radius: 30px; font-size: 0.7rem; color: var(--text-muted); margin-right: 10px; margin-bottom: 10px; }
         
-        .hero-content h1 { font-size: clamp(2.5rem, 5vw, 4.5rem); font-weight: 800; line-height: 1; margin-bottom: 25px; }
-        .hero-content h1 span { color: var(--gold); }
+        .btn-primary {
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 18px 40px; background: var(--text-main); color: var(--bg-deep);
+            font-weight: 900; font-size: 0.85rem; letter-spacing: 2px; transition: var(--transition);
+        }
+        .btn-primary:hover { background: var(--gold); color: var(--bg-deep); transform: translateY(-5px); }
+
+        .hero-visual { position: relative; width: 100%; opacity: 0; transform: scale(0.95); transition: 1s ease 0.4s forwards; }
+        .visual-frame {
+            position: relative; aspect-ratio: 16/9; padding: 15px;
+            background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 4px;
+        }
+        .slider { width: 100%; height: 100%; position: relative; overflow: hidden; border-radius: 2px; }
+        .slide { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: 1.5s ease-in-out; filter: saturate(1.2); }
+        .slide.active { opacity: 1; transform: scale(1.05); }
+        .visual-badge { position: absolute; bottom: -20px; right: 30px; background: var(--gold); color: var(--bg-deep); padding: 15px 25px; font-weight: 900; font-size: 0.75rem; letter-spacing: 2px; }
+
+        /* =========================================
+           5. PRICING SECTION (6 CARDS)
+        ========================================= */
+        .section-padding { padding: 120px 6%; }
+        .section-header { margin-bottom: 80px; text-align: center; }
+        .section-title { font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; text-transform: uppercase; letter-spacing: 2px; }
+        .section-title span { color: var(--gold); }
+
+        .pricing-group { margin-bottom: 100px; }
+        .group-heading { font-size: 1.5rem; font-weight: 800; color: var(--gold); margin-bottom: 40px; display: inline-block; border-bottom: 2px solid var(--border-glass); padding-bottom: 10px; }
         
-        .hero-image-box { 
-            flex: 1.2; position: relative; aspect-ratio: 16/9; 
-            padding: 10px; background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,215,0,0.1);
+        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; }
+        .p-card {
+            background: var(--bg-card); border: 1px solid var(--border-glass); padding: 50px 40px;
+            display: flex; flex-direction: column; transition: var(--transition); position: relative;
+            transform: translateY(50px); opacity: 0;
         }
-        .image-slider { width: 100%; height: 100%; position: relative; overflow: hidden; }
-        .slide { position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: 1.5s ease-in-out; }
-        .slide.active { opacity: 1; }
-        .box-label { position: absolute; bottom: -15px; right: -15px; background: var(--gold); color: #000; padding: 10px 20px; font-size: 0.65rem; font-weight: 800; }
+        .p-card.is-visible { transform: translateY(0); opacity: 1; }
+        .p-card:hover { border-color: var(--gold); background: rgba(255, 215, 0, 0.02); transform: translateY(-10px); }
+        .p-card.featured { border-top: 4px solid var(--gold); background: linear-gradient(180deg, rgba(212, 175, 55, 0.05) 0%, rgba(0,0,0,0) 100%); }
+        
+        .p-badge { position: absolute; top: 20px; right: 20px; background: var(--gold); color: var(--bg-deep); font-size: 0.6rem; font-weight: 900; padding: 6px 12px; letter-spacing: 1px; }
+        .p-name { font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; color: var(--text-muted); }
+        .p-price { font-size: 3rem; font-weight: 900; margin-bottom: 30px; line-height: 1; }
+        .p-price span { font-size: 1rem; color: var(--text-muted); font-weight: 500; }
+        
+        .p-features { list-style: none; margin-bottom: 40px; flex-grow: 1; }
+        .p-features li { padding: 12px 0; border-bottom: 1px solid var(--border-glass); font-size: 0.95rem; color: #ccc; display: flex; align-items: flex-start; }
+        .p-features li::before { content: "✦"; color: var(--gold); margin-right: 12px; font-size: 0.8rem; margin-top: 2px; }
+        
+        .btn-card { display: block; width: 100%; text-align: center; padding: 16px; border: 1px solid var(--border-glass); color: var(--text-main); font-weight: 800; font-size: 0.8rem; letter-spacing: 2px; transition: var(--transition); }
+        .btn-card.gold { background: var(--gold); border-color: var(--gold); color: var(--bg-deep); }
+        .p-card:hover .btn-card:not(.gold) { border-color: var(--gold); color: var(--gold); }
 
-        /* --- 3. PRICING SECTION --- */
-        /* Container chính */
-     .pricing-container {
-    background: #000;
-    color: #fff;
-    padding: 80px 5%;
-     }
-
-     .category-title {
-    font-size: 1.8rem;
-    font-weight: 800;
-    margin: 60px 0 30px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-     }
-
-        /* Lưới bảng giá */
-      .pricing-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 25px;
-     }
-
-        /* Thẻ bảng giá */
-     .price-card {
-    background: #ffffff;
-    color: #333;
-    padding: 40px 30px;
-    border-radius: 20px;
-    position: relative;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 10px 30px rgba(255, 255, 255, 0.05);
-     }
-
-    .price-card:hover {
-    transform: translateY(-15px);
-    box-shadow: 0 20px 40px rgba(212, 175, 55, 0.2);
-     }
-
-    /* Thẻ nổi bật (Best Seller) */
-     .price-card.featured {
-    border: 2px solid #FFD700;
-    }
-
-     .badge {
-     position: absolute;
-     top: -12px;
-     left: 60%;
-     transform: translateX(-50%);
-     background: #FFD700;
-     color: #000;
-     padding: 5px 20px;
-     border-radius: 20px;
-     font-weight: 800;
-     font-size: 0.7rem;
-     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-     }
-
-     /* Nội dung bên trong thẻ */
-     .price-card h3 { font-size: 1.4rem; margin-bottom: 10px; font-weight: 800; }
-     .card-desc { font-size: 0.9rem; color: #777; margin-bottom: 25px; height: 40px; }
-     .cost { font-size: 2.2rem; font-weight: 900; color: #000; margin-bottom: 30px; }
-
-     /* Danh sách tính năng */
-     .features { list-style: none; margin-bottom: 40px; flex-grow: 1; }
-     .features li { 
-     margin-bottom: 12px; 
-     font-size: 0.95rem; 
-     display: flex; 
-     align-items: flex-start;
-     gap: 10px;
-     color: #444;
-     }
-     .features li::before {
-     content: "✓";
-     color: #FFD700;
-     font-weight: 900;
-     }
-     .features li.disabled {
-    color: #ccc;
-    text-decoration: line-through;
-     }
-    .features li.disabled::before { content: "✕"; color: #ccc; }
-
-/* Nút Book ngay */
-.btn-book {
-    display: block;
-    text-align: center;
-    padding: 15px;
-    background: #f4f4f4;
-    color: #333;
-    text-decoration: none;
-    border-radius: 12px;
-    font-weight: 800;
-    font-size: 0.9rem;
-    transition: 0.3s;
-}
-
-.btn-book:hover { background: #e0e0e0; }
-.btn-book.gold { background: #FFD700; color: #000; }
-.btn-book.gold:hover { background: #e6c200; transform: scale(1.02); }
-
-/* Tối ưu Mobile */
-@media (max-width: 768px) {
-    .pricing-grid { grid-template-columns: 1fr; }
-    .price-card { padding: 30px 20px; }
-}
-        /* --- 4. PORTFOLIO STAGGERED (16:9) --- */
-        .portfolio-staggered { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; padding-bottom: 100px; }
-        .port-item-169 { 
-            position: relative; aspect-ratio: 16/9; overflow: hidden; 
-            background: #111; cursor: pointer; transition: 0.4s;
-            opacity: 0; transform: scale(0.9);
+        /* =========================================
+           6. PORTFOLIO SECTION (12 ITEMS STAGGERED)
+        ========================================= */
+        .portfolio-filters { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; margin-bottom: 60px; }
+        .filter-btn { background: none; border: none; color: var(--text-muted); font-size: 0.85rem; font-weight: 800; letter-spacing: 2px; padding: 10px 20px; transition: 0.3s; }
+        .filter-btn.active { color: var(--gold); border-bottom: 2px solid var(--gold); }
+        
+        .portfolio-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+        .port-item { position: relative; aspect-ratio: 16/9; overflow: hidden; opacity: 0; transform: translateY(50px); transition: 0.8s ease; }
+        .port-item.is-visible { opacity: 1; transform: translateY(0); }
+        .port-item.hide { display: none; }
+        .port-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s ease, filter 0.5s; filter: grayscale(80%) brightness(0.6); }
+        .port-item:hover img { transform: scale(1.08); filter: grayscale(0%) brightness(1); }
+        
+        @media (min-width: 993px) {
+            .port-item:nth-child(3n + 2) { margin-top: 60px; }
         }
-        .port-item-169.reveal { opacity: 1; transform: scale(1); }
-        .port-item-169:nth-child(3n + 2) { transform: translateY(60px); }
-        .port-item-169 img { width: 100%; height: 100%; object-fit: cover; transition: 0.8s; }
-        .port-item-169:hover img { transform: scale(1.1); filter: brightness(1.2); }
-        .port-item-169:active img { transform: scale(0.95); }
 
-        /* Nút bấm hiệu ứng Shimmer */
-        .btn-main {
-            display: inline-block; padding: 18px 40px; background: var(--white); color: #000;
-            text-decoration: none; font-weight: 800; font-size: 0.8rem; letter-spacing: 1px;
-            position: relative; overflow: hidden; transition: 0.3s;
+        /* =========================================
+           7. FEEDBACK SECTION
+        ========================================= */
+        .feedback-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 40px; }
+        .fb-card { background: var(--bg-card); border: 1px solid var(--border-glass); padding: 50px; opacity: 0; transform: translateY(50px); transition: 0.8s; }
+        .fb-card.is-visible { opacity: 1; transform: translateY(0); }
+        .fb-card:hover { border-color: var(--gold); }
+        .quote-icon { color: var(--gold); font-size: 3rem; line-height: 0; margin-bottom: 30px; display: block; font-family: serif; }
+        .fb-text { font-size: 1.1rem; color: #ccc; line-height: 1.8; margin-bottom: 40px; font-style: italic; }
+        .fb-client { display: flex; align-items: center; gap: 20px; }
+        .fb-client img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-glass); }
+        .fb-info h4 { font-size: 1rem; font-weight: 800; color: var(--text-main); }
+        .fb-info span { font-size: 0.8rem; color: var(--gold); }
+
+        /* =========================================
+           8. RESPONSIVE DESIGN (MOBILE FIX)
+        ========================================= */
+        @media (max-width: 1024px) {
+            .hero-grid { grid-template-columns: 1fr; text-align: center; gap: 60px; }
+            .hero-desc { margin: 0 auto 40px; }
+            .brand-box { border: none; padding: 0; background: none; }
+            .hero-title { font-size: 3rem; }
+            .portfolio-grid { grid-template-columns: 1fr; }
+            .port-item:nth-child(3n + 2) { margin-top: 0; }
+            nav { padding: 20px 6%; }
+            .nav-links { display: none; /* Rút gọn trên mobile cho sạch */ }
+            #cursor-dot, #cursor-ring { display: none; }
+            * { cursor: auto !important; }
         }
-        .btn-main:hover { background: var(--gold); }
-
-        /* --- RESPONSIVE --- */
-        @media (max-width: 992px) {
-            .header-container { flex-direction: column; text-align: center; padding-top: 100px; }
-            .nav-links { 
-                position: fixed; top: 0; right: -100%; width: 80%; height: 100vh; 
-                background: #000; flex-direction: column; justify-content: center; 
-                align-items: center; transition: 0.5s; 
-            }
-            .nav-links.active { right: 0; }
-            .menu-toggle { display: flex; }
-            .portfolio-staggered { grid-template-columns: 1fr; }
-            .port-item-169:nth-child(3n + 2) { transform: none; }
-        }
-        /* --- FEEDBACK SECTION --- */
-         .feedback-section {
-    padding: 100px 8%;
-    background: #050505; /* Đen sâu hơn để làm nổi card */
-}
-
-.feedback-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 30px;
-    margin-top: 50px;
-}
-
-.feedback-card {
-    background: #111;
-    padding: 40px;
-    border-radius: 4px; /* Góc nhọn cinematic */
-    border: 1px solid #222;
-    transition: var(--transition);
-    position: relative;
-    opacity: 0;
-    transform: translateY(30px);
-}
-
-.feedback-card.reveal {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.feedback-card:hover {
-    border-color: var(--gold);
-    background: #161616;
-}
-
-.featured-feedback {
-    border-color: rgba(212, 175, 55, 0.3);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-
-.stars {
-    color: var(--gold);
-    font-size: 0.8rem;
-    margin-bottom: 20px;
-    letter-spacing: 2px;
-}
-
-.quote {
-    font-style: italic;
-    color: #ccc;
-    font-size: 0.95rem;
-    line-height: 1.8;
-    margin-bottom: 30px;
-}
-
-.customer {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.customer img {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid var(--gold);
-}
-
-.cust-info h4 {
-    font-size: 0.9rem;
-    font-weight: 800;
-    margin-bottom: 2px;
-}
-
-.cust-info span {
-    font-size: 0.75rem;
-    color: #666;
-}
-
-/* Hiệu ứng nháy vàng nhẹ khi hover */
-.feedback-card::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 2px;
-    background: var(--gold);
-    transform: scaleX(0);
-    transition: 0.4s;
-}
-.feedback-card:hover::after {
-    transform: scaleX(1);
-}
-.brand-intro-box {
-    max-width: 800px;
-    margin: 60px auto;
-    padding: 40px;
-    background: rgba(255, 255, 255, 0.02);
-    border-left: 4px solid var(--gold); /* Vạch vàng đặc trưng bên trái */
-    position: relative;
-    overflow: hidden;
-}
-
-.est-tag {
-    font-size: 0.7rem;
-    letter-spacing: 3px;
-    color: var(--gold);
-    font-weight: 800;
-}
-
-.brand-name {
-    font-size: 2rem;
-    font-weight: 800;
-    margin: 10px 0;
-    color: #fff;
-}
-
-.brand-name span {
-    color: var(--gold);
-}
-
-.divider-gold {
-    width: 50px;
-    height: 2px;
-    background: var(--gold);
-    margin: 20px 0;
-}
-
-.brand-description {
-    font-size: 1.1rem;
-    line-height: 1.8;
-    color: #ccc;
-    font-weight: 300;
-}
-
-.brand-description strong {
-    color: #fff;
-    font-weight: 600;
-}
-
-.field-tags {
-    margin-top: 30px;
-    display: flex;
-    gap: 15px;
-}
-
-.field-tags span {
-    font-size: 0.7rem;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    border: 1px solid #333;
-    padding: 5px 12px;
-    border-radius: 20px;
-}
-.portfolio-section { padding: 100px 8%; background: #000; }
-
-/* Filter Buttons */
-.portfolio-filters { display: flex; justify-content: center; gap: 20px; margin-bottom: 60px; }
-.filter-btn {
-    background: transparent; border: 1px solid #333; color: #888;
-    padding: 10px 25px; cursor: pointer; font-weight: 800; font-size: 0.7rem;
-    letter-spacing: 2px; transition: 0.3s;
-}
-.filter-btn.active, .filter-btn:hover { border-color: var(--gold); color: var(--gold); }
-
-/* Grid Layout */
-.portfolio-container {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 30px; max-width: 1300px; margin: 0 auto;
-}
-
-.portfolio-item {
-    position: relative; aspect-ratio: 16 / 9; overflow: hidden;
-    background: #111; transition: 0.5s; display: block; /* Mặc định hiện */
-}
-
-/* Hiệu ứng so le cho cột giữa */
-.portfolio-item:nth-child(3n + 2) { transform: translateY(50px); }
-
-.portfolio-item img { width: 100%; height: 100%; object-fit: cover; transition: 0.8s; opacity: 0.8; }
-.portfolio-item:hover img { transform: scale(1.1); opacity: 1; }
-
-/* Ẩn/Hiện khi lọc */
-.portfolio-item.hide { display: none; }
-
-/* Info Hover */
-.portfolio-item .info {
-    position: absolute; inset: 0; display: flex; flex-direction: column;
-    justify-content: flex-end; padding: 20px;
-    background: linear-gradient(transparent, rgba(0,0,0,0.8));
-    opacity: 0; transition: 0.4s;
-}
-.portfolio-item:hover .info { opacity: 1; }
     </style>
 </head>
 <body>
 
+    <div id="preloader"><div class="loader-text">@HANOI.MEDIA</div></div>
+    <div id="cursor-dot"></div>
+    <div id="cursor-ring"></div>
+    <div id="progress-bar"></div>
+
     <nav id="navbar">
-        <div class="logo"><span class="hanoi">@hanoi</span><span class="media">.media</span></div>
-        <div class="menu-toggle" id="mobile-menu">
-            <span></span><span></span><span></span>
-        </div>
+        <div class="logo">@hanoi<span>.media</span></div>
         <div class="nav-links">
-            <a href="#services">BÁO GIÁ</a>
-            <a href="#portfolio">DỰ ÁN</a>
-            <a href="https://www.facebook.com/HaNoii.Media/">LIÊN HỆ</a>
+            <a href="#services" class="interactable">BÁO GIÁ</a>
+            <a href="#portfolio" class="interactable">DỰ ÁN</a>
+            <a href="https://www.facebook.com/HaNoii.Media/" target="_blank" class="interactable">LIÊN HỆ</a>
         </div>
     </nav>
 
-    <header>
-       <div class="brand-intro-box">
-    <div class="intro-content">
-        <span class="est-tag">EST. 2024</span>
-        <h2 class="brand-name">@HANOI.<span>MEDIA</span></h2>
-        <div class="divider-gold"></div>
-        <p class="brand-description">
-            Tiên phong trong lĩnh vực sản xuất hình ảnh <strong>Du lịch & Kỷ yếu Cinematic</strong>. 
-            Tại đây, chúng tôi không chỉ cầm máy để ghi hình, chúng tôi dùng lăng kính để gói ghém những xúc cảm 
-            về một tuổi trẻ rực rỡ và những chuyến hành trình đầy nhiệt huyết.
-        </p>
-        <div class="field-tags">
-            <span>#Tourism</span>
-            <span>#Yearbook</span>
-            <span>#Cinematic</span>
-        </div>
-    </div>
-
-            <div class="hero-image-box">
-                <div class="image-slider">
-                    <img src="https://lh3.googleusercontent.com/u/0/d/1OmwikHCeUBbl_tb1pmVL6XYXVjmswzAY" class="slide active">
-                    <img src="https://lh3.googleusercontent.com/u/0/d/1Ruk1iUo81sWhoXTTJgKOn3HkASzJEQNq" class="slide">
-                    <img src="https://lh3.googleusercontent.com/u/0/d/14pcvFDKjan5DkoYGGLs17HuBqXIKTxLA" class="slide">
+    <header class="hero">
+        <div class="hero-grid">
+            <div class="hero-content">
+                <span class="tagline">EST. 2024</span>
+                <h1 class="hero-title">KỂ CHUYỆN BẰNG <br><span>ÁNH SÁNG.</span></h1>
+                <p class="hero-desc">Lưu giữ trọn vẹn sự rực rỡ của tuổi trẻ qua lăng kính Cinematic. Đội ngũ sản xuất hình ảnh chuyên biệt cho Media Tour, Teambuilding và Kỷ yếu sáng tạo.</p>
+                <div class="hero-tags">
+                    <span>#TOURISM</span><span>#YEARBOOK</span><span>#CINEMATIC</span>
                 </div>
-                <div class="box-label">HANOI.MEDIA / PROJECTS</div>
+                <a href="https://www.facebook.com/HaNoii.Media/" target="_blank" class="btn-primary interactable" style="margin-top: 20px;">KHÁM PHÁ NGAY</a>
+            </div>
+
+            <div class="hero-visual">
+                <div class="visual-frame">
+                    <div class="slider">
+                        <img src="https://drive.google.com/uc?export=view&id=1Taag565MYCa7VeaSC_r4JTfPnUTY8i3T-" class="slide active">
+                        <img src="https://drive.google.com/uc?export=view&id=1Taag565MYCa7VeaSC_r4JTfPnUTY8i3T-" class="slide">
+                    </div>
+                    <div class="visual-badge">PROJECTS 2026</div>
+                </div>
             </div>
         </div>
     </header>
-</section>
-    <section id="services" class="pricing-container">
-    <h2 class="sec-title">DỊCH VỤ & BÁO GIÁ</h2>
 
-    <div class="pricing-category">
-        <h3 class="category-title"><i class="icon">✈️</i> Recap Tour / Teambuilding</h3>
-        <div class="pricing-grid">
-            <div class="price-card">
-                <h3>Gói Photo Tour</h3>
-                <p class="card-desc">Lưu giữ khoảnh khắc tĩnh đầy nghệ thuật.</p>
-                <span class="cost">1.600.000đ</span>
-                <ul class="features">
-                    <li>01 Thợ chụp chuyên nghiệp</li>
-                    <li>Trả 100% file gốc ngay trong ngày</li>
-                    <li>Retouch kỹ 30 ảnh chọn lọc</li>
-                    <li>Blend màu Cinematic độc quyền</li>
-                    <li>Hỗ trợ tạo dáng nhiệt tình</li>
-                </ul>
-                <a href="https://m.me/hanoi.media" class="btn-book">Book ngay</a>
-            </div>
+    <section id="services" class="section-padding">
+        <div class="section-header reveal-target">
+            <h2 class="section-title">BẢNG GIÁ <span>DỊCH VỤ</span></h2>
+        </div>
 
-            <div class="price-card">
-                <h3>Gói Video Tour</h3>
-                <p class="card-desc">Thước phim sống động, bắt trọn cảm xúc.</p>
-                <span class="cost">1.800.000đ</span>
-                <ul class="features">
-                    <li>01 Thợ quay chuyên nghiệp</li>
-                    <li>Thiết bị: Gimbal, Flycam (nếu địa hình cho phép)</li>
-                    <li>Video dựng highlight 3-5 phút</li>
-                    <li>Color grading chuyên sâu</li>
-                    <li>Trả bài sau 24h-48h</li>
-                </ul>
-                <a href="https://m.me/hanoi.media" class="btn-book">Book ngay</a>
-            </div>
-
-            <div class="price-card featured">
-                <span class="badge">BEST SELLER</span>
-                <h3>Combo Toàn Diện</h3>
-                <p class="card-desc">Giải pháp tiết kiệm nhất cho tập thể.</p>
-                <span class="cost">3.000.000đ</span>
-                <ul class="features">
-                    <li>Bao gồm cả Photo & Video</li>
-                    <li>02 Nhân sự (1 Quay + 1 Chụp)</li>
-                    <li>Tặng 01 Video TikTok/Reels bắt trend</li>
-                    <li>Ưu đãi 15% cho lần book tiếp theo</li>
-                    <li>Buddy Care: Hỗ trợ nước, y tế cơ bản</li>
-                </ul>
-                <a href="https://www.facebook.com/HaNoii.Media/" class="btn-book gold">Book ngay</a>
+        <div class="pricing-group">
+            <h3 class="group-heading reveal-target">✈️ Recap Tour & Event</h3>
+            <div class="pricing-grid">
+                <div class="p-card reveal-target interactable-card">
+                    <h4 class="p-name">Photo Tour</h4>
+                    <div class="p-price">1.6M</div>
+                    <ul class="p-features">
+                        <li>01 Photo chuyên nghiệp</li>
+                        <li>Chụp không giới hạn file</li>
+                        <li>Trả file ngay trong ngày</li>
+                        <li>Retouch 30 ảnh chọn lọc</li>
+                    </ul>
+                    <a href="https://www.facebook.com/HaNoii.Media/" target="_blank" class="btn-card interactable">LIÊN HỆ ĐẶT LỊCH</a>
+                </div>
+                <div class="p-card featured reveal-target interactable-card">
+                    <span class="p-badge">BEST SELLER</span>
+                    <h4 class="p-name">Combo Media</h4>
+                    <div class="p-price">3.0M</div>
+                    <ul class="p-features">
+                        <li>02 Nhân sự (Photo + Video 4K)</li>
+                        <li>Tặng Video TikTok Viral</li>
+                        <li>Ưu đãi 15% lần book sau</li>
+                        <li>Bàn giao sản phẩm sau 24h</li>
+                    </ul>
+                    <a href="https://www.facebook.com/HaNoii.Media/" target="_blank" class="btn-card gold interactable">LIÊN HỆ ĐẶT LỊCH</a>
+                </div>
+                <div class="p-card reveal-target interactable-card">
+                    <h4 class="p-name">Video Tour</h4>
+                    <div class="p-price">1.8M</div>
+                    <ul class="p-features">
+                        <li>01 Video Grapher chuyên nghiệp</li>
+                        <li>Highlight Cinematic 3-5 phút</li>
+                        <li>Flycam & Gimbal 4K</li>
+                        <li>Color Grading nghệ thuật</li>
+                    </ul>
+                    <a href="https://www.facebook.com/HaNoii.Media/" target="_blank" class="btn-card interactable">LIÊN HỆ ĐẶT LỊCH</a>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="pricing-category">
-        <h3 class="category-title"><i class="icon">🎓</i> The Yearbook / Kỷ yếu</h3>
-        <div class="pricing-grid">
-            <div class="price-card">
-                <h3>Basic Yearbook</h3>
-                <p class="card-desc">Gói cơ bản, tiết kiệm cho học sinh.</p>
-                <span class="cost">500.000đ/ng</span>
-                <ul class="features">
-                    <li>02 Concept chụp (Đồng phục + Tự chọn)</li>
-                    <li>Chụp không giới hạn file</li>
-                    <li>Photoshop toàn bộ ảnh in</li>
-                    <li>Ekip vui tính, nhiệt tình</li>
-                    <li class="disabled">Hỗ trợ phụ kiện cơ bản</li>
-                </ul>
-                <a href="https://m.me/hanoi.media" class="btn-book">Book ngay</a>
-            </div>
-
-            <div class="price-card featured">
-                <span class="badge">BEST SELLER</span>
-                <h3>Standard Yearbook</h3>
-                <p class="card-desc">Gói tiêu chuẩn, đầy đủ trải nghiệm.</p>
-                <span class="cost">600.000đ/ng</span>
-                <ul class="features">
-                    <li>03 Concept chụp đa dạng</li>
-                    <li>Tặng gói quay Video BTS lớp</li>
-                    <li>Buddy Care: Nước uống, đồ ăn nhẹ</li>
-                    <li>Tư vấn Concept & Trang phục</li>
-                    <li>Flycam xếp chữ (nếu sân rộng)</li>
-                </ul>
-                <a href="https://m.me/hanoi.media" class="btn-book gold">Book ngay</a>
-            </div>
-
-            <div class="price-card">
-                <h3>Premium Yearbook</h3>
-                <p class="card-desc">Trải nghiệm thượng hạng, quẩy hết mình.</p>
-                <span class="cost">750.000đ/ng</span>
-                <ul class="features">
-                    <li>Bao gồm tất cả quyền lợi Standard</li>
-                    <li>Party Night / BBQ tối (+100k)</li>
-                    <li>Tặng pháo hoa cầm tay, bột màu</li>
-                    <li>Full phụ kiện: Loa, súng bong bóng, máy bay</li>
-                    <li>Giao ảnh siêu tốc 24h</li>
-                </ul>
-                <a href="https://m.me/hanoi.media" class="btn-book">Book ngay</a>
+        <div class="pricing-group">
+            <h3 class="group-heading reveal-target">🎓 The Yearbook / Kỷ yếu</h3>
+            <div class="pricing-grid">
+                <div class="p-card reveal-target interactable-card">
+                    <h4 class="p-name">Basic</h4>
+                    <div class="p-price">500k<span>/pax</span></div>
+                    <ul class="p-features">
+                        <li>02 Concept chụp cơ bản</li>
+                        <li>Hỗ trợ phụ kiện chụp ảnh</li>
+                        <li>Photoshop toàn bộ ảnh in</li>
+                        <li>Chụp không giới hạn số lượng</li>
+                    </ul>
+                    <a href="https://www.facebook.com/HaNoii.Media/" target="_blank" class="btn-card interactable">LIÊN HỆ ĐẶT LỊCH</a>
+                </div>
+                <div class="p-card featured reveal-target interactable-card">
+                    <span class="p-badge">POPULAR</span>
+                    <h4 class="p-name">Standard</h4>
+                    <div class="p-price">600k<span>/pax</span></div>
+                    <ul class="p-features">
+                        <li>03 Concept chụp đa dạng</li>
+                        <li>Tặng gói quay Video BTS lớp</li>
+                        <li>Buddy Care hỗ trợ nước uống, y tế</li>
+                        <li>Flycam xếp chữ chuyên nghiệp</li>
+                    </ul>
+                    <a href="https://www.facebook.com/HaNoii.Media/" target="_blank" class="btn-card gold interactable">LIÊN HỆ ĐẶT LỊCH</a>
+                </div>
+                <div class="p-card reveal-target interactable-card">
+                    <h4 class="p-name">Premium</h4>
+                    <div class="p-price">750k<span>/pax</span></div>
+                    <ul class="p-features">
+                        <li>Bao gồm tất cả quyền lợi Standard</li>
+                        <li>Party Night / BBQ tối cực chill</li>
+                        <li>Tặng pháo hoa cầm tay, bột màu</li>
+                        <li>Trả toàn bộ file siêu tốc 24h</li>
+                    </ul>
+                    <a href="https://www.facebook.com/HaNoii.Media/" target="_blank" class="btn-card interactable">LIÊN HỆ ĐẶT LỊCH</a>
+                </div>
             </div>
         </div>
-    </div>
-    <section id="feedback" class="feedback-section">
-    <div class="container">
-        <p class="sub-title">FEEDBACK</p>
-        <h2 class="sec-title">KHÁCH HÀNG NÓI GÌ VỀ @HANOI.MEDIA</h2>
+    </section>
 
+    <section id="portfolio" class="section-padding">
+        <div class="section-header reveal-target">
+            <h2 class="section-title">DỰ ÁN <span>TIÊU BIỂU</span></h2>
+        </div>
+        
+        <div class="portfolio-filters reveal-target">
+            <button class="filter-btn active interactable" data-filter="all">TẤT CẢ</button>
+            <button class="filter-btn interactable" data-filter="tour">RECAP TOUR</button>
+            <button class="filter-btn interactable" data-filter="yearbook">THE YEARBOOK</button>
+        </div>
+
+        <div class="portfolio-grid">
+            <div class="port-item tour reveal-target interactable-card"><img src="https://drive.google.com/uc?export=view&id=1Taag565MYCa7VeaSC_r4JTfPnUTY8i3T-"></div>
+            <div class="port-item yearbook reveal-target interactable-card"><img src="https://drive.google.com/uc?export=view&id=1Taag565MYCa7VeaSC_r4JTfPnUTY8i3T-"></div>
+            <div class="port-item tour reveal-target interactable-card"><img src="https://drive.google.com/uc?export=view&id=1Taag565MYCa7VeaSC_r4JTfPnUTY8i3T-"></div>
+            
+            <div class="port-item yearbook reveal-target interactable-card"><img src="https://drive.google.com/uc?export=view&id=1Taag565MYCa7VeaSC_r4JTfPnUTY8i3T-"></div>
+            <div class="port-item tour reveal-target interactable-card"><img src="https://drive.google.com/uc?export=view&id=1Taag565MYCa7VeaSC_r4JTfPnUTY8i3T-"></div>
+            <div class="port-item yearbook reveal-target interactable-card"><img src="https://drive.google.com/uc?export=view&id=1Taag565MYCa7VeaSC_r4JTfPnUTY8i3T-"></div>
+            
+            <div class="port-item tour reveal-target interactable-card"><img src="https://drive.google.com/uc?export=view&id=1Taag565MYCa7VeaSC_r4JTfPnUTY8i3T-"></div>
+            <div class="port-item yearbook reveal-target interactable-card"><img src="https://drive.google.com/uc?export=view&id=1Taag565MYCa7VeaSC_r4JTfPnUTY8i3T-"></div>
+            <div class="port-item tour reveal-target interactable-card"><img src="https://drive.google.com/uc?export=view&id=1Taag565MYCa7VeaSC_r4JTfPnUTY8i3T-"></div>
+            
+            <div class="port-item yearbook reveal-target interactable-card"><img src="https://drive.google.com/uc?export=view&id=1Taag565MYCa7VeaSC_r4JTfPnUTY8i3T-"></div>
+            <div class="port-item tour reveal-target interactable-card"><img src="https://drive.google.com/uc?export=view&id=1Taag565MYCa7VeaSC_r4JTfPnUTY8i3T-"></div>
+            <div class="port-item yearbook reveal-target interactable-card"><img src="https://drive.google.com/uc?export=view&id=1Taag565MYCa7VeaSC_r4JTfPnUTY8i3T-"></div>
+        </div>
+    </section>
+
+    <section id="feedback" class="section-padding" style="background: var(--bg-deep);">
+        <div class="section-header reveal-target">
+            <h2 class="section-title">CÂU CHUYỆN <span>KHÁCH HÀNG</span></h2>
+        </div>
+        
         <div class="feedback-grid">
-            <div class="feedback-card">
-                <div class="stars">★★★★★</div>
-                <p class="quote">"Team nhiệt tình thực sự! Bộ ảnh kỷ yếu lớp mình ai cũng ưng, màu blend rất nghệ. Đặc biệt là mấy bạn Buddy Care chăm sóc lớp từ miếng nước đến cách tạo dáng luôn."</p>
-                <div class="customer">
-                    <img src="https://lh3.googleusercontent.com/u/0/d/1s9h0PT_MczkoUlywwsB6oIDyPdLLqbfe" alt="Avatar">
-                    <div class="cust-info">
+            <div class="fb-card reveal-target interactable-card">
+                <span class="quote-icon">"</span>
+                <p class="fb-text">Làm việc với Vanh và team rất chuyên nghiệp. Video Recap tour Hải Phòng trả bài đúng 24h, dựng rất có gu và bắt trọn khoảnh khắc. Chắc chắn sẽ hợp tác lâu dài với @hanoi.media!</p>
+                <div class="fb-client">
+                    <img src="https://via.placeholder.com/150" alt="Client">
+                    <div class="fb-info">
+                        <h4>DJ HEAVEN</h4>
+                        <span>Điều hành - Công ty du lịch Mỹ Hạnh</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fb-card reveal-target interactable-card">
+                <span class="quote-icon">"</span>
+                <p class="fb-text">Team nhiệt tình thực sự! Bộ ảnh kỷ yếu lớp mình ai cũng ưng, màu blend Cinematic rất nghệ. Đặc biệt là mấy bạn Buddy Care chăm sóc lớp từ miếng nước đến cách tạo dáng luôn.</p>
+                <div class="fb-client">
+                    <img src="https://via.placeholder.com/150" alt="Client">
+                    <div class="fb-info">
                         <h4>THÙY CHI</h4>
-                        <span>THPT NGUYỄN THIỆN THUẬT</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="feedback-card featured-feedback">
-                <div class="stars">★★★★★</div>
-                <p class="quote">"Làm việc với Vanh và team rất chuyên nghiệp. Video Recap tour Hải Phòng trả bài đúng 24h, dựng rất có gu và bắt trọn khoảnh khắc. Chắc chắn sẽ hợp tác lâu dài!"</p>
-                <div class="customer">
-                    <img src="https://lh3.googleusercontent.com/u/0/d/1QUkAi_w3rruJNIZ1BNFv5kKQfgYK423S" alt="Avatar">
-                    <div class="cust-info">
-                        <h4>DJ HAEVEN</h4>
-                        <span>ĐIỀU HÀNH - CÔNG TY DU LỊCH MỸ HẠNH</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="feedback-card">
-                <div class="stars">★★★★★</div>
-                <p class="quote">"Ảnh sự kiện Gala Night rất sắc nét, ánh sáng xử lý tốt dù điều kiện tiệc tối rất khó. Cảm ơn @hanoi.media đã giúp công ty mình có những tư liệu truyền thông xịn."</p>
-                <div class="customer">
-                    <img src="https://lh3.googleusercontent.com/u/0/d/1b50xgVuOg_RxKl3GJ1ZxEpfqzZwaAa7r" alt="Avatar">
-                    <div class="cust-info">
-                        <h4>Anh Sơn Hà</h4>
-                        <span>Điều hành PHT</span>
+                        <span>Bí thư lớp - THPT Nguyễn Thiện Thuật</span>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <section id="portfolio" class="portfolio-section">
-    <h2 class="sec-title">DỰ ÁN TIÊU BIỂU</h2>
-    
-    <div class="portfolio-filters">
-        <button class="filter-btn active" data-filter="all">TẤT CẢ</button>
-        <button class="filter-btn" data-filter="tour">RECAP TOUR</button>
-        <button class="filter-btn" data-filter="yearbook">KỶ YẾU</button>
-    </div>
-
-    <div class="portfolio-container">
-        <div class="portfolio-item tour reveal">
-            <img src="https://lh3.googleusercontent.com/u/0/d/1eHLk7X2sIbjV9aNWU6n1ELz2aLb2Y8mP">
-            <div class="info"><h4>HƯƠNG ANH TOURIST</h4><p>FLC SẦM SƠN</p></div>
-        </div>
-        <div class="portfolio-item tour reveal">
-            <img src="https://lh3.googleusercontent.com/u/0/d/1AKC8KPX5UDWj5Qa9kyHWvLqHAgIEK83l">
-            <div class="info"><h4>MỸ HẠNH TRAVEL</h4><p>MỘC CHÂU</p></div>
-        </div>
-        <div class="portfolio-item tour reveal">
-            <img src="https://lh3.googleusercontent.com/u/0/d/1Jy-L4CkHvp9bqhQ2Of9HNmbgdl6bjm8P">
-            <div class="info"><h4>K69 VIỆT ĐỨC</h4><p>HẠ LONG</p></div>
-        </div>
-        <div class="portfolio-item tour reveal">
-            <img src="https://lh3.googleusercontent.com/u/0/d/1canI-CeNrh--Mrw6FKueoieD4UHP5dnY">
-            <div class="info"><h4>MỸ HẠNH TRAVEL</h4><p>MAI CHÂU</p></div>
-        </div>
-        <div class="portfolio-item tour reveal">
-            <img src="https://lh3.googleusercontent.com/u/0/d/1dDtIpp7VzwrKSGVoWqXr4eqRWM88tLjs">
-            <div class="info"><h4>GALA NIGHT</h4><p>MAI CHÂU</p></div>
-        </div>
-        <div class="portfolio-item tour reveal">
-            <img src="https://lh3.googleusercontent.com/u/0/d/16lwtqFBTvGqq4s1b2KLaitCBO47tPD39">
-            <div class="info"><h4>VEGETAXCO</h4><p>VŨNG TÀU</p></div>
-        </div>
-
-        <div class="portfolio-item yearbook reveal">
-            <img src="https://lh3.googleusercontent.com/u/0/d/1CTvPVQ7ui_wI3o9RA6NrAGW8ye1YFXd-">
-            <div class="info"><h4>THPT TRẦN NHÂN TÔNG</h4><p>HẢI PHÒNG</p></div>
-        </div>
-        <div class="portfolio-item yearbook reveal">
-            <img src="https://lh3.googleusercontent.com/u/0/d/1Taag565MYCa7VeaSC_r4JTfPnUTY8i3T">
-            <div class="info"><h4>THPT NGUYỄN THIỆN THUẬT</h4><p>CONCEPT THANH XUÂN</p></div>
-        </div>
-        <div class="portfolio-item yearbook reveal">
-            <img src="https://lh3.googleusercontent.com/u/0/d/1iZ8Eapy8Qrxf8_vXnwaojyFQ-ue3SX5X">
-            <div class="info"><h4>ĐÓNG BĂNG THỜI GIAN</h4><p>CONCEPT TÂM SỰ</p></div>
-        </div>
-        <div class="portfolio-item yearbook reveal">
-            <img src="https://lh3.googleusercontent.com/u/0/d/1IGKuuWVN4yeuqmdhIUcPNxCHN67d6FCC">
-            <div class="info"><h4>12A7</h4><p>CONCEPT THANH XUÂN</p></div>
-        </div>
-        <div class="portfolio-item yearbook reveal">
-            <img src="https://lh3.googleusercontent.com/u/0/d/1aTgAviMYbggUosETEvZ0vaogzpGgAjyP">
-            <div class="info"><h4>TRƯỜNG HỌC</h4><p>CONCEPT TRƯỜNG HỌC</p></div>
-        </div>
-        <div class="portfolio-item yearbook reveal">
-            <img src="https://lh3.googleusercontent.com/u/0/d/1_ehgk_rayLbvwDGMcF58iqHTqDdMcG78">
-            <div class="info"><h4>HỌC SINH</h4><p>CONCEPT HỌC ĐƯỜNG</p></div>
-        </div>
-    </div>
-</section>
+    </section>
 
     <script>
-        // 1. Đổi màu Navbar và hiệu ứng Scroll Reveal
-        window.addEventListener('scroll', () => {
-            const navbar = document.getElementById('navbar');
-            if (window.scrollY > 50) navbar.classList.add('scrolled');
-            else navbar.classList.remove('scrolled');
+        // 1. PRELOADER & INITIAL REVEAL
+        window.addEventListener('load', () => {
+            const preloader = document.getElementById('preloader');
+            setTimeout(() => {
+                preloader.style.opacity = '0';
+                preloader.style.visibility = 'hidden';
+                document.querySelector('.hero-content').style.opacity = '1';
+                document.querySelector('.hero-content').style.transform = 'translateY(0)';
+                document.querySelector('.hero-visual').style.opacity = '1';
+                document.querySelector('.hero-visual').style.transform = 'scale(1)';
+            }, 1200); // Đợi hiệu ứng typing chạy xong
+        });
 
-            // Hiệu ứng hiện dần khi cuộn trang
-            const reveals = document.querySelectorAll('.price-card, .port-item-169, .sec-title');
-            reveals.forEach(el => {
-                const windowHeight = window.innerHeight;
-                const revealTop = el.getBoundingClientRect().top;
-                if (revealTop < windowHeight - 100) el.classList.add('reveal');
+        // 2. MAGNETIC CUSTOM CURSOR
+        const cursorDot = document.getElementById('cursor-dot');
+        const cursorRing = document.getElementById('cursor-ring');
+        
+        document.addEventListener('mousemove', (e) => {
+            cursorDot.style.left = e.clientX + 'px';
+            cursorDot.style.top = e.clientY + 'px';
+            // Delay nhẹ cho vòng tròn bên ngoài tạo cảm giác mượt
+            setTimeout(() => {
+                cursorRing.style.left = e.clientX + 'px';
+                cursorRing.style.top = e.clientY + 'px';
+            }, 50);
+        });
+
+        document.querySelectorAll('.interactable, .interactable-card').forEach(el => {
+            el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+            el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+        });
+
+        // 3. SCROLL LOGIC (NAVBAR, PROGRESS, REVEAL)
+        window.addEventListener('scroll', () => {
+            let scrollTop = document.documentElement.scrollTop;
+            let scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            
+            // Progress Bar
+            document.getElementById("progress-bar").style.width = (scrollTop / scrollHeight) * 100 + "%";
+
+            // Navbar
+            const nav = document.getElementById('navbar');
+            if (scrollTop > 50) nav.classList.add('scrolled');
+            else nav.classList.remove('scrolled');
+
+            // Scroll Reveal Elements
+            document.querySelectorAll('.reveal-target').forEach(el => {
+                if (el.getBoundingClientRect().top < window.innerHeight - 50) {
+                    el.classList.add('is-visible');
+                }
             });
         });
 
-        // 2. Mobile Menu Toggle
-        const mobileMenu = document.getElementById('mobile-menu');
-        const navLinks = document.querySelector('.nav-links');
-        mobileMenu.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
-        });
+        // Trigger scroll event once on load to reveal elements already in viewport
+        window.dispatchEvent(new Event('scroll'));
 
-        // 3. Slider tự động
+        // 4. IMAGE SLIDER
         let currentSlide = 0;
         const slides = document.querySelectorAll('.slide');
-        function playSlider() {
-            if(slides.length === 0) return;
-            slides[currentSlide].classList.remove('active');
-            currentSlide = (currentSlide + 1) % slides.length;
-            slides[currentSlide].classList.add('active');
+        if(slides.length > 0) {
+            setInterval(() => {
+                slides[currentSlide].classList.remove('active');
+                currentSlide = (currentSlide + 1) % slides.length;
+                slides[currentSlide].classList.add('active');
+            }, 3500);
         }
-        setInterval(playSlider, 3000);
 
-        // 4. Smooth Scroll cho các Link
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
+        // 5. PORTFOLIO FILTER SYSTEM
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const portfolioItems = document.querySelectorAll('.port-item');
+        
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active class from all
+                filterBtns.forEach(b => b.classList.remove('active'));
+                // Add to clicked
+                btn.classList.add('active');
+                
+                const filterValue = btn.getAttribute('data-filter');
+                
+                portfolioItems.forEach(item => {
+                    item.classList.remove('is-visible'); // Reset animation
+                    
+                    setTimeout(() => {
+                        if (filterValue === 'all' || item.classList.contains(filterValue)) {
+                            item.classList.remove('hide');
+                            // Small delay to trigger CSS transition
+                            setTimeout(() => item.classList.add('is-visible'), 50);
+                        } else {
+                            item.classList.add('hide');
+                        }
+                    }, 300); // Đợi mờ đi rồi mới ẩn hẳn
                 });
             });
         });
-    // Hiệu ứng hiện dần khi cuộn trang
-    const observePricing = () => {
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach((entry, index) => {
-                if (entry.isIntersecting) {
-                    // Tạo hiệu ứng trễ (delay) cho từng thẻ trong lưới
-                    setTimeout(() => {
-                        entry.target.style.opacity = "1";
-                        entry.target.style.transform = "translateY(0)";
-                    }, index * 150);
-                }
-            });
-        }, { threshold: 0.1 });
-
-        document.querySelectorAll('.price-card').forEach(card => {
-            card.style.opacity = "0";
-            card.style.transform = "translateY(30px)";
-            card.style.transition = "all 0.6s ease-out";
-            observer.observe(card);
-        });
-    };
-
-    // Chạy khi trang đã load xong
-    document.addEventListener('DOMContentLoaded', observePricing);
-    // Hiệu ứng hiện dần cho Feedback
-const feedbackObserver = new IntersectionObserver((entries) => {
-    entries.forEach((entry, index) => {
-        if (entry.isIntersecting) {
-            setTimeout(() => {
-                entry.target.classList.add('reveal');
-            }, index * 200); // Mỗi card hiện cách nhau 0.2s
-        }
-    });
-}, { threshold: 0.1 });
-
-document.querySelectorAll('.feedback-card').forEach(card => {
-    feedbackObserver.observe(card);
-});
     </script>
-  <script>
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    const portfolioItems = document.querySelectorAll('.portfolio-item');
-
-    filterButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            // Cập nhật nút active
-            filterButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
-            const filterValue = btn.getAttribute('data-filter');
-
-            portfolioItems.forEach(item => {
-                if (filterValue === 'all' || item.classList.contains(filterValue)) {
-                    item.classList.remove('hide');
-                } else {
-                    item.classList.add('hide');
-                }
-            });
-        });
-    });
-</script>
 </body>
-
 </html>
